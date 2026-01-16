@@ -1,34 +1,48 @@
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import os
+import numpy as np
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 from sklearn.metrics import classification_report, confusion_matrix
-import numpy as np
 
-# Load trained model
-model = load_model("model/disease_model.h5")
+# Silence TensorFlow logs (VERY IMPORTANT on Windows)
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
-# Image preprocessing (same as training)
-img_size = 224
+MODEL_PATH = os.path.join("model", "disease_model.h5")
+DATASET_DIR = "dataset/train"
+IMG_SIZE = (224, 224)
+BATCH_SIZE = 32
 
-datagen = ImageDataGenerator(rescale=1./255)
+# Load model
+model = load_model(MODEL_PATH)
 
-val_data = datagen.flow_from_directory(
-    'dataset/train',
-    target_size=(img_size, img_size),
-    batch_size=32,
-    class_mode='binary',
-    shuffle=False
+# Load validation dataset
+val_ds = tf.keras.utils.image_dataset_from_directory(
+    DATASET_DIR,
+    validation_split=0.2,
+    subset="validation",
+    seed=123,
+    image_size=IMG_SIZE,
+    batch_size=BATCH_SIZE,
+    label_mode="binary"
 )
 
-# True labels
-y_true = val_data.classes
+# Normalize images
+normalization_layer = tf.keras.layers.Rescaling(1.0 / 255)
+val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
 
-# Predictions
-y_pred = model.predict(val_data)
-y_pred = (y_pred > 0.5).astype(int).reshape(-1)
+# Collect true labels
+y_true = np.concatenate([y.numpy().flatten() for _, y in val_ds])
 
-# Results
-print("Classification Report:\n")
-print(classification_report(y_true, y_pred))
+# Predict silently
+y_pred_prob = model.predict(val_ds, verbose=0).flatten()
 
-print("Confusion Matrix:\n")
+# Apply threshold
+THRESHOLD = 0.55
+y_pred = (y_pred_prob >= THRESHOLD).astype(int)
+
+# Print evaluation (NO UNICODE)
+print("\nClassification Report:")
+print(classification_report(y_true, y_pred, digits=4))
+
+print("\nConfusion Matrix:")
 print(confusion_matrix(y_true, y_pred))
