@@ -6,6 +6,15 @@ This project implements an **AI-based medical image classification system** to d
 
 ---
 
+## 🌍 Live Demo
+
+🚀 **Try the application here:**  
+👉 https://pneumonia-detection-using-chest-x-ray-images-yfgelhhxwk2ptlgfl.streamlit.app/
+
+> Note: The app may take a few seconds to wake up if it is idle.
+
+---
+
 ## 🎯 Problem Statement
 
 Pneumonia is a serious respiratory infection that requires early and accurate diagnosis. Manual analysis of chest X-ray images is time-consuming and depends heavily on expert radiologists. This project aims to assist diagnosis by automatically classifying chest X-ray images as **NORMAL** or **PNEUMONIA** using deep learning techniques.
